@@ -1,0 +1,25 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/HackerNewsApi.Api/*.csproj \
+     src/HackerNewsApi.Api/
+COPY src/HackerNewsApi.Application/*.csproj \
+     src/HackerNewsApi.Application/
+COPY src/HackerNewsApi.Infrastructure/*.csproj \
+     src/HackerNewsApi.Infrastructure/
+RUN dotnet restore \
+    src/HackerNewsApi.Api/HackerNewsApi.Api.csproj
+
+COPY src/ src/
+RUN dotnet publish src/HackerNewsApi.Api \
+    -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+
+USER app
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "HackerNewsApi.Api.dll"]

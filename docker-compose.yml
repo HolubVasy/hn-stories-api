@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - HackerNewsApi__BaseUrl=https://hacker-news.firebaseio.com/v0/
+      - HackerNewsApi__CacheDurationMinutes=5
+      - HackerNewsApi__MaxConcurrentRequests=20
+      - HackerNewsApi__TotalTimeoutSeconds=30
+      - HackerNewsApi__MaxStoryCount=200
+      - HackerNewsApi__RetryCount=3
+      - HackerNewsApi__RetryBaseDelaySeconds=2
+      - HackerNewsApi__CircuitBreakerThreshold=5
+      - HackerNewsApi__CircuitBreakerDurationSeconds=30
+      - HackerNewsApi__BestStoryIdsCacheDurationSeconds=30
+    restart: unless-stopped
