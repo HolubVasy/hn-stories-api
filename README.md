@@ -6,7 +6,7 @@ ASP.NET Core Minimal API (.NET 10) that serves the best N stories from Hacker Ne
 
 ## How to Run
 
-### Option A — .NET SDK
+### Option A – .NET SDK
 
 **Prerequisites:** .NET 10 SDK
 
@@ -20,10 +20,14 @@ cd src/HackerNewsApi.Api
 dotnet run
 ```
 
+After last command you should see such picture:
+
+<img width="3836" height="1991" alt="image" src="https://github.com/user-attachments/assets/4a0e4dc8-ac24-456f-a826-50839dcdab3b" />
+
 - Swagger UI: `https://localhost:{port}/swagger`
 - OpenAPI doc: `https://localhost:{port}/openapi/v1.json`
 
-### Option B — Docker (preferred)
+### Option B – Docker (preferred)
 
 **Prerequisites:** Docker / Docker Desktop
 
@@ -54,10 +58,10 @@ GET /api/stories/best?n={count}&skip={skip}
 
 | Parameter | Type | Required | Default | Constraints |
 |-----------|------|----------|---------|-------------|
-| `n`       | int  | Yes      | —       | 1 ≤ n ≤ 200 |
+| `n`       | int  | Yes      | –       | 1 ≤ n ≤ 200 |
 | `skip`    | int  | No       | 0       | ≥ 0         |
 
-### Success Response — 200 OK
+### Success Response – 200 OK
 
 ```json
 [
@@ -93,7 +97,7 @@ All errors return `ProblemDetails` JSON (RFC 9457):
 
 | Status | When |
 |--------|------|
-| 200 | Success — array of stories |
+| 200 | Success – array of stories |
 | 400 | `n` missing/invalid/out of range; `skip` negative or non-integer |
 | 503 | Upstream HN API unavailable or timeout |
 | 500 | Unexpected server error |
@@ -111,35 +115,35 @@ Client → Our API → ID cache [Hit] → Story cache [Hit] → Return
                                                       → Cache story → Return
 ```
 
-1. **Two-tier in-memory caching (`IMemoryCache`)** — Story IDs are cached for 30 seconds; individual story details for 5 minutes (both configurable). When caches are warm, incoming requests require zero outbound HTTP calls.
+1. **Two-tier in-memory caching (`IMemoryCache`)** – Story IDs are cached for 30 seconds; individual story details for 5 minutes (both configurable). When caches are warm, incoming requests require zero outbound HTTP calls.
 
-2. **Global concurrency throttling (`SemaphoreSlim`)** — A Singleton semaphore caps total in-flight outbound calls to HN at 20 concurrent story-detail fetches (configurable), regardless of how many incoming requests arrive simultaneously.
+2. **Global concurrency throttling (`SemaphoreSlim`)** – A Singleton semaphore caps total in-flight outbound calls to HN at 20 concurrent story-detail fetches (configurable), regardless of how many incoming requests arrive simultaneously.
 
-3. **`IHttpClientFactory`** — Manages `HttpClient` lifetimes, connection pooling, and DNS refresh. Prevents socket exhaustion under high load.
+3. **`IHttpClientFactory`** – Manages `HttpClient` lifetimes, connection pooling, and DNS refresh. Prevents socket exhaustion under high load.
 
-4. **Standard resilience pipeline** via `AddStandardResilienceHandler()` — Retry with exponential backoff (3 attempts), circuit breaker (threshold 5, break 30s), and total timeout (30s). `HttpClient.Timeout` is set to infinite — Polly owns all timeout control. All thresholds configurable via `appsettings.json`.
+4. **Standard resilience pipeline** via `AddStandardResilienceHandler()` – Retry with exponential backoff (3 attempts), circuit breaker (threshold 5, break 30s), and total timeout (30s). `HttpClient.Timeout` is set to infinite – Polly owns all timeout control. All thresholds configurable via `appsettings.json`.
 
-5. **Graceful degradation** — Deleted/dead stories and stories with null score are silently skipped. If `n` exceeds available stories, we return what we have.
+5. **Graceful degradation** – Deleted/dead stories and stories with null score are silently skipped. If `n` exceeds available stories, we return what we have.
 
-6. **`CancellationToken` propagation** — If a client disconnects, all in-flight HTTP calls to HN API are cancelled immediately, freeing resources.
+6. **`CancellationToken` propagation** – If a client disconnects, all in-flight HTTP calls to HN API are cancelled immediately, freeing resources.
 
 ---
 
 ## Architecture
 
-Layered structure — three source projects, strict one-way dependencies:
+Layered structure – three source projects, strict one-way dependencies:
 
-- **`HackerNewsApi.Api`** — Minimal API endpoints, global exception middleware, DI wiring, OpenAPI. `Program.cs` delegates registration to extension methods.
-- **`HackerNewsApi.Application`** — Business logic (`StoryService`), interfaces (`IStoryService`, `IHackerNewsClient`), DTOs, `StoryMapper`, custom exceptions. No external dependencies.
-- **`HackerNewsApi.Infrastructure`** — `HackerNewsClient` (HTTP, Polly), `CachedHackerNewsClient` (decorator pattern), `HackerNewsApiSettings` (validated at startup with `ValidateOnStart()`).
+- **`HackerNewsApi.Api`** – Minimal API endpoints, global exception middleware, DI wiring, OpenAPI. `Program.cs` delegates registration to extension methods.
+- **`HackerNewsApi.Application`** – Business logic (`StoryService`), interfaces (`IStoryService`, `IHackerNewsClient`), DTOs, `StoryMapper`, custom exceptions. No external dependencies.
+- **`HackerNewsApi.Infrastructure`** – `HackerNewsClient` (HTTP, Polly), `CachedHackerNewsClient` (decorator pattern), `HackerNewsApiSettings` (validated at startup with `ValidateOnStart()`).
 
 ```
 Api → Application ← Infrastructure
 ```
 
 Test projects:
-- **`HackerNewsApi.UnitTests`** — xUnit + Moq + FluentAssertions (33 tests)
-- **`HackerNewsApi.IntegrationTests`** — `WebApplicationFactory` + `FakeHackerNewsClient` (21 tests)
+- **`HackerNewsApi.UnitTests`** – xUnit + Moq + FluentAssertions (33 tests)
+- **`HackerNewsApi.IntegrationTests`** – `WebApplicationFactory` + `FakeHackerNewsClient` (21 tests)
 
 ---
 
