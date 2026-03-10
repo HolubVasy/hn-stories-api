@@ -1,23 +1,34 @@
-# Build output
-**/bin/
-**/obj/
-
-# IDE
-.vs/
-.idea/
+## .NET
+bin/
+obj/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
-# OS
-.DS_Store
+## Visual Studio
+.vs/
+*.csproj.user
+launchSettings.json
+
+## Rider
+.idea/
+
+## OS
 Thumbs.db
+*.DS_Store
 
-# NuGet
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## NuGet
 *.nupkg
-.nuget/
-
-# Logs
-*.log
-
-# Test results
-TestResults/
+**/packages/*
+project.lock.json
+project.fragment.lock.json
+artifacts/
